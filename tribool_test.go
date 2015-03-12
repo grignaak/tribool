@@ -2,6 +2,24 @@ package tribool
 
 import "testing"
 
+func TestTribool_synonyms(t *testing.T) {
+	table := [][]Tribool{
+		{No, Off, False},
+		{Maybe, Indeterminate},
+		{Yes, On, True},
+	}
+
+	for _, synonyms := range table {
+		master := synonyms[0]
+		for i, other := range synonyms[1:] {
+			if master != other {
+				t.Errorf("Element %d should equal %s (%d) but is %d",
+					(i + 1), master, int(master), int(other))
+			}
+		}
+	}
+}
+
 func TestTribool_Ops1(t *testing.T) {
 	N, x, Y := No, Maybe, Yes
 	table := []struct {

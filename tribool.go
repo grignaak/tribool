@@ -1,38 +1,133 @@
 /*
 Package tribool implements a tri-state boolean where the extra state is indeterminate.
+
+Maybe
+
+A tri-state boolean has the values False, True, and Maybe. Maybe represents a
+value that is neither true or false but it is inderminate. For example, you
+don't know if an http POST was successful if the connection is dropped after
+the request was made but before the response came back. This can be modeled
+with the indeterminate Maybe value.
+
+Tribool provides tri-state logical operators that act like their boolean
+counterparts. The logic tables are documented below and on each method. There
+are also methods for mixed Tribool and bool operations.
+
+Parsing
+
+The tribool package is especially useful for parsing flags that may need a
+default value. For example:
+
+	var x string // from somehere
+	var flag bool = tribool.FromString(x).WithMaybeAsFalse()
+
+Parsing is case sensitive. The following table shows what will be parsed to
+true and false values, anything else (including the empty string) results in
+the indeterminate value.
+
+	case insensitive | result
+	-----------------+-------
+	               t | Yes
+	               y | Yes
+	               1 | Yes
+	              on | Yes
+	             yes | Yes
+	            true | Yes
+	               f | No
+	               n | No
+	               0 | No
+	              no | No
+	             off | No
+	           false | No
+	 <anything else> | Maybe
+
+
+Truth Tables
+
+Tribool supports the following binary operations:
+
+		    |  and      or       nand        nor      xor    iff   implies
+		    | a ∧ b   a ∨ b   ¬(a ∧ b)   ¬(a ∨ b)   a ⊕ b  a ⇔ b  a ⇒ b
+		a b | b ∧ a   b ∨ a   ¬(b ∧ a)   ¬(b ∨ a)   b ⊕ a  b ⇔ a    —
+		----+-----------------------------------------------------------------
+		N N |   N       N          Y          Y        N       Y      Y
+		N ? |   N       ?          Y          ?        ?       ?      Y
+		N Y |   N       Y          Y          N        Y       N      Y
+		? N |   N       ?          Y          ?        ?       ?      ?
+		? ? |   ?       ?          ?          ?        ?       ?      ?
+		? Y |   ?       Y          ?          N        ?       ?      Y
+		Y N |   N       Y          Y          N        Y       N      N
+		Y ? |   ?       Y          ?          N        ?       ?      ?
+		Y Y |   Y       Y          N          N        N       Y      Y
+
+Tribool supports the following unary operations:
+
+		a | not   upgrade    downgrade
+		--+----------------------------
+		N |  Y       N          N
+		? |  ?       Y          N
+		Y |  N       Y          Y
+
 */
 package tribool
 
 /*
 Tribool is a tri-state boolean where the extra state is indeterminate.
+
+The default value for a Tribool is False, just like a boolean.
 */
 type Tribool int
 
 const (
-	// No is equivalent to false
-	No Tribool = iota
+	no Tribool = 0
 
-	// Maybe true; maybe false
-	Maybe
+	// No is equivalent to boolean false
+	No Tribool = no
 
-	// Yes is quivalent to true
-	Yes
+	// False is equivalent to boolean false
+	False
+
+	// Off is equivalent to boolean false
+	Off
+)
+
+const (
+	maybe Tribool = 1
+
+	// Maybe represents a value either true or false, but don't know which.
+	Maybe Tribool = maybe
+
+	// Perhaps is a synonym for Maybe
+	Perhaps
 
 	// Indeterminate is a synonym for Maybe
-	Indeterminate = Maybe
+	Indeterminate
+)
+
+const (
+	yes Tribool = 2
+
+	// Yes is equivalent to boolean true
+	Yes Tribool = yes
+
+	// True is equivalent to boolean true
+	True
+
+	// On is equivalent to boolean true
+	On
 )
 
 var values = [3]Tribool{No, Maybe, Yes}
-var strings = [3]string{"No", "Maybe", "Yes"}
+var strings = [3]string{"no", "maybe", "yes"}
 
 /*
-FromBool converts a boolean to a Tribool.
+FromBool converts a bool to an equivalent Tribool.
 */
 func FromBool(b bool) Tribool {
 	if b {
-		return Yes
+		return yes
 	}
-	return No
+	return no
 }
 
 /*
@@ -52,7 +147,7 @@ WithMaybeAsTrue converts the Tribool to a boolean by coercing Maybe to true.
 		Y | Y
 */
 func (a Tribool) WithMaybeAsTrue() bool {
-	return a != No
+	return a != no
 }
 
 /*
@@ -65,7 +160,7 @@ WithMaybeAsFalse converts the Tribool to a boolean by coercing Maybe to false.
 		Y | Y
 */
 func (a Tribool) WithMaybeAsFalse() bool {
-	return a == Yes
+	return a == yes
 }
 
 /*
@@ -194,7 +289,7 @@ Xor implements logical exclusive-or.
 
 		    | a.Xor(b)
 		a b | b.Xor(a)
-		----+----
+		----+---------
 		N N | N
 		N ? | ?
 		N Y | Y
@@ -228,6 +323,13 @@ Implication is not reflexive. That is a.Imply(b) is not the same as b.Imply(a)
 */
 func (a Tribool) Imply(b Tribool) Tribool {
 	return b.Or(a.Not())
+}
+
+/*
+ImplyBool is equivalent to a.Imply(FromBool(b))
+*/
+func (a Tribool) ImplyBool(b bool) Tribool {
+	return a.Imply(FromBool(b))
 }
 
 /*
@@ -270,27 +372,28 @@ FromString converts a string to a Tribool.
 	 <anything else> | Maybe
 */
 func FromString(s string) Tribool {
-	if s == "Yes" {
-		return Yes
+	// most flags will be marked as true. This is the fast-path.
+	if s == "true" {
+		return yes
 	}
 
 	switch len(s) {
 	case 1:
 		switch s[0] {
 		case 't', 'T', 'y', 'Y', '1':
-			return Yes
+			return yes
 		case 'f', 'F', 'n', 'N', '0':
-			return No
+			return no
 		}
 	case 2:
 		ch0, ch1 := s[0], s[1]
 		switch {
 		case (ch0 == 'o' || ch0 == 'O') &&
 			(ch1 == 'n' || ch1 == 'N'):
-			return Yes
+			return yes
 		case (ch0 == 'n' || ch0 == 'N') &&
 			(ch1 == 'o' || ch1 == 'O'):
-			return No
+			return no
 		}
 	case 3:
 		ch0, ch1, ch2 := s[0], s[1], s[2]
@@ -298,11 +401,11 @@ func FromString(s string) Tribool {
 		case (ch0 == 'y' || ch0 == 'Y') &&
 			(ch1 == 'e' || ch1 == 'E') &&
 			(ch2 == 's' || ch2 == 'S'):
-			return Yes
+			return yes
 		case (ch0 == 'o' || ch0 == 'O') &&
 			(ch1 == 'f' || ch1 == 'F') &&
 			(ch2 == 'f' || ch2 == 'F'):
-			return No
+			return no
 		}
 	case 4:
 		ch0, ch1, ch2, ch3 := s[0], s[1], s[2], s[3]
@@ -310,7 +413,7 @@ func FromString(s string) Tribool {
 			(ch1 == 'r' || ch1 == 'R') &&
 			(ch2 == 'u' || ch2 == 'U') &&
 			(ch3 == 'e' || ch3 == 'E') {
-			return Yes
+			return yes
 		}
 	case 5:
 		ch0, ch1, ch2, ch3, ch4 := s[0], s[1], s[2], s[3], s[4]
@@ -319,9 +422,9 @@ func FromString(s string) Tribool {
 			(ch2 == 'l' || ch2 == 'L') &&
 			(ch3 == 's' || ch3 == 'S') &&
 			(ch4 == 'e' || ch4 == 'E') {
-			return No
+			return no
 		}
 	}
 
-	return Maybe
+	return maybe
 }

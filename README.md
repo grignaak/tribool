@@ -24,11 +24,10 @@ A tri-state boolean has the values False, True, and Maybe. Maybe represents a
 value that is either true or false but it is inderminate which it is. For
 example, you don't know if an http POST was successful if the connection is
 dropped after the request was made but before the response came back. This can
-be modeled with the Maybe value.
+be modeled with the indeterminate Maybe value.
 
 Tribool provides tri-state logical operators that act like their boolean
-counterparts. The logic tables are documented for each method. There are also
-methods for mixed Tribool and bool operations.
+counterparts. The logic tables are documented below.
 
 ## Parsing
 
