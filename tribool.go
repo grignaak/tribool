@@ -212,7 +212,7 @@ func (a Tribool) Xor(b Tribool) Tribool {
 /*
 Imply implements logical implication.
 
-Implication is not reflexive. That is a.Imply(b) is not b.Imply(a)
+Implication is not reflexive. That is a.Imply(b) is not the same as b.Imply(a)
 
 		a b | a.Imply(b)
 		----+------------
@@ -265,6 +265,7 @@ FromString converts a string to a Tribool.
 	               n | No
 	               0 | No
 	              no | No
+				 off | No
 	           false | No
 	 <anything else> | Maybe
 */
