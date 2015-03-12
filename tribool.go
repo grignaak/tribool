@@ -192,7 +192,7 @@ func (a Tribool) Nor(b Tribool) Tribool {
 /*
 Xor implements logical exclusive-or.
 
-			| a.Xor(b)
+		    | a.Xor(b)
 		a b | b.Xor(a)
 		----+----
 		N N | N
@@ -233,7 +233,7 @@ func (a Tribool) Imply(b Tribool) Tribool {
 /*
 Equiv implements logical equivalence.
 
-			| a.Equiv(b)
+		    | a.Equiv(b)
 		a b | b.Equiv(a)
 		----+------
 		N N | Y
@@ -265,7 +265,7 @@ FromString converts a string to a Tribool.
 	               n | No
 	               0 | No
 	              no | No
-				 off | No
+	             off | No
 	           false | No
 	 <anything else> | Maybe
 */
