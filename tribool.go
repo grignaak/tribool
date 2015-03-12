@@ -252,6 +252,13 @@ func (a Tribool) Nand(b Tribool) Tribool {
 }
 
 /*
+NandBool is equivalent to a.Nand(FromBool(b))
+*/
+func (a Tribool) NandBool(b bool) Tribool {
+	return a.Nand(FromBool(b))
+}
+
+/*
 Not implements logical not.
 
 		 a | a.Not()
@@ -285,6 +292,13 @@ func (a Tribool) Nor(b Tribool) Tribool {
 }
 
 /*
+NorBool is equivalent to a.Nor(FromBool(b))
+*/
+func (a Tribool) NorBool(b bool) Tribool {
+	return a.Nor(FromBool(b))
+}
+
+/*
 Xor implements logical exclusive-or.
 
 		    | a.Xor(b)
@@ -302,6 +316,13 @@ Xor implements logical exclusive-or.
 */
 func (a Tribool) Xor(b Tribool) Tribool {
 	return a.Or(b).And(a.Nand(b))
+}
+
+/*
+XorBool is equivalent to a.Xor(FromBool(b))
+*/
+func (a Tribool) XorBool(b bool) Tribool {
+	return a.Xor(FromBool(b))
 }
 
 /*
@@ -350,6 +371,13 @@ Equiv implements logical equivalence.
 */
 func (a Tribool) Equiv(b Tribool) Tribool {
 	return a.And(b).Or(a.Nor(b))
+}
+
+/*
+EquivBool is equivalent to a.Equiv(FromBool(b))
+*/
+func (a Tribool) EquivBool(b bool) Tribool {
+	return a.Equiv(FromBool(b))
 }
 
 /*
