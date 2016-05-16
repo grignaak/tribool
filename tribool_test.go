@@ -1,6 +1,10 @@
 package tribool
 
-import "testing"
+import (
+	"encoding/json"
+	"fmt"
+	"testing"
+)
 
 func TestTribool_synonyms(t *testing.T) {
 	table := [][]Tribool{
@@ -239,5 +243,44 @@ func TestTribool_parse(t *testing.T) {
 
 	if FromString("") != Maybe {
 		t.Errorf(errf, "", FromString(""), Maybe)
+	}
+}
+
+func TestTribool_UnmarshalJSON(t *testing.T) {
+	table := []struct {
+		jsonString string
+		expected   Tribool
+	}{
+		{`true`, True}, {`false`, False},
+		{`"true"`, True}, {`"false"`, False},
+		{`"yes"`, True}, {`"no"`, False},
+		{`"maybe"`, Maybe}, {`""`, Maybe},
+		{`"asdf"`, Maybe}, {`2`, Maybe},
+		{`{"an":"object"}`, Maybe}, {`null`, Maybe},
+	}
+	for _, test := range table {
+		var tri Tribool
+		err := json.Unmarshal([]byte(test.jsonString), &tri)
+		if err != nil {
+			t.Errorf("Unmarshalling %s returned error: %v", test.jsonString, err)
+		} else {
+			if tri != test.expected {
+				t.Errorf("json.Unmarshal(%s) => %v instead of the expected %v", test.jsonString, tri, test.expected)
+			}
+		}
+	}
+}
+
+func TestTribool_MarshalJSON(t *testing.T) {
+	for _, tri := range values {
+		jsonBytes, err := json.Marshal(tri)
+		if err != nil {
+			t.Errorf("Marshalling %v returned error: %v", tri, err)
+		} else {
+			expected := fmt.Sprintf(`"%s"`, tri.String())
+			if string(jsonBytes) != expected {
+				t.Errorf("json.Marshal(%v) => %s instead of the expected %v", tri, string(jsonBytes), expected)
+			}
+		}
 	}
 }

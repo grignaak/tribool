@@ -71,6 +71,12 @@ Tribool supports the following unary operations:
 */
 package tribool
 
+import (
+	"errors"
+
+	"encoding/json"
+)
+
 /*
 Tribool is a tri-state boolean where the extra state is indeterminate.
 
@@ -455,4 +461,27 @@ func FromString(s string) Tribool {
 	}
 
 	return maybe
+}
+
+// MarshalJSON marshals tribools to strings, using the Tribool.String() method.
+func (a Tribool) MarshalJSON() ([]byte, error) {
+	return json.Marshal(a.String())
+}
+
+// UnmarshalJSON supports unmarshalling from a json string (using `FromString()`), a json
+// boolean (using `FromBool()`), and treats anything else as `maybe`.
+func (a *Tribool) UnmarshalJSON(data []byte) error {
+	if a == nil {
+		return errors.New("tribool.TriBool: UnmarshalJSON on nil pointer")
+	}
+	var s string
+	var b bool
+	if err := json.Unmarshal(data, &s); err == nil {
+		*a = FromString(s)
+	} else if err := json.Unmarshal(data, &b); err == nil {
+		*a = FromBool(b)
+	} else {
+		*a = Maybe
+	}
+	return nil
 }
