@@ -21,7 +21,7 @@ default value. For example:
 	var x string // from somehere
 	var flag bool = tribool.FromString(x).WithMaybeAsFalse()
 
-Parsing is case sensitive. The following table shows what will be parsed to
+Parsing is case insensitive. The following table shows what will be parsed to
 true and false values, anything else (including the empty string) results in
 the indeterminate value.
 
