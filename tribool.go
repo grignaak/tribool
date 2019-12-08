@@ -159,7 +159,7 @@ func (a Tribool) WithMaybeAsTrue() bool {
 /*
 WithMaybeAsFalse converts the Tribool to a boolean by coercing Maybe to false.
 
-		a | a.WithMaybeAsTrue()
+		a | a.WithMaybeAsFalse()
 		--+----------------------
 		N | N
 		? | N
